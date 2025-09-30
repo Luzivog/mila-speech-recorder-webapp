@@ -6,7 +6,9 @@ interface HeaderProps {
   language: string;
   onLanguageChange: (language: string) => void;
   selectedCount: number;
+  filteredCount: number;
   onDownload: () => void;
+  onDownloadFiltered: () => void;
   downloading: boolean;
 }
 
@@ -14,7 +16,9 @@ export function Header({
   language,
   onLanguageChange,
   selectedCount,
+  filteredCount,
   onDownload,
+  onDownloadFiltered,
   downloading,
 }: HeaderProps) {
   return (
@@ -34,13 +38,31 @@ export function Header({
 
         <Button
           type="button"
+          onClick={onDownloadFiltered}
+          disabled={downloading || filteredCount === 0}
+          className="bg-purple-600 text-grey-800 shadow-sm hover:bg-purple-500"
+        >
+          <Download className="size-4" />
+          {downloading
+            ? "Preparing…"
+            : filteredCount === 0
+            ? "Download filtered"
+            : `Download filtered (${filteredCount})`}
+        </Button>
+
+        <Button
+          type="button"
           variant="outline"
           onClick={onDownload}
           disabled={downloading || selectedCount === 0}
           className="bg-white/80 border-purple-200 text-purple-700 hover:bg-purple-100/70"
         >
           <Download className="size-4" />
-          {downloading ? "Preparing…" : selectedCount === 0 ? "Download" : `Download (${selectedCount})`}
+          {downloading
+            ? "Preparing…"
+            : selectedCount === 0
+            ? "Download selected"
+            : `Download selected (${selectedCount})`}
         </Button>
       </div>
     </div>

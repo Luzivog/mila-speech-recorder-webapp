@@ -36,7 +36,7 @@ export function UtteranceRow({ utterance, selected, onSelectChange, disabled = f
           checked={selected}
           onChange={(event) => onSelectChange(event.target.checked)}
           disabled={disabled}
-          className="h-4 w-4 rounded border-purple-300 text-purple-600 focus:ring-purple-400"
+          className="h-4 w-4 rounded"
         />
       </TableCell>
       <TableCell className="whitespace-nowrap text-sm text-gray-600">

@@ -11,10 +11,12 @@ function App() {
     rows,
     page,
     setPage,
+    count,
     language,
     setLanguage,
     loading,
     totalPages,
+    debouncedLang,
   } = useUtterances();
 
   const {
@@ -24,7 +26,7 @@ function App() {
     toggleMany,
   } = useSelectableIds();
 
-  const { downloading, downloadByIds } = useUtteranceDownload();
+  const { downloading, downloadByIds, downloadFiltered } = useUtteranceDownload();
 
   const handleDownload = useCallback(() => {
     if (downloading || selectedIds.size === 0) {
@@ -34,15 +36,25 @@ function App() {
     void downloadByIds(Array.from(selectedIds));
   }, [downloadByIds, downloading, selectedIds]);
 
+  const handleDownloadFiltered = useCallback(() => {
+    if (downloading || count === 0) {
+      return;
+    }
+
+    void downloadFiltered({ language: debouncedLang });
+  }, [count, debouncedLang, downloadFiltered, downloading]);
+
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-blue-50/30 via-purple-50/20 to-indigo-50/30">
-      <div className="flex w-full min-h-screen flex-col gap-6 p-6 md:p-8">
+      <div className="flex w-full min-h-screen max-h-screen flex-col gap-6 p-6 md:p-8">
         <Header
           language={language}
           onLanguageChange={setLanguage}
           selectedCount={selectedCount}
+          filteredCount={count}
           downloading={downloading}
           onDownload={handleDownload}
+          onDownloadFiltered={handleDownloadFiltered}
         />
 
         <Card className="flex min-h-0 flex-1 overflow-hidden border-purple-200/60 bg-white/80 backdrop-blur-xl shadow-xl shadow-purple-100/50 ring-1 ring-purple-100/50">
