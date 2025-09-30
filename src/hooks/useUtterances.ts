@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import type { UtteranceRow } from "@/types/utterance";
 import { PAGE_SIZE } from "@/constants/app";
+import { normalizeUtteranceRows } from "@/lib/utterances";
 
 export function useUtterances() {
   const [rows, setRows] = useState<UtteranceRow[]>([]);
@@ -35,7 +36,7 @@ export function useUtterances() {
       let q = supabase
         .from("utterances")
         .select(
-          "id, device_id, speaker_id, idx, text, created_at, language, recordings(storage_key, ext, status)",
+          "id, device_id, speaker_id, idx, text, created_at, language, speaker:speakers(display_name), recordings(storage_key, ext, status)",
           { count: "exact" }
         )
         .order("created_at", { ascending: false })
@@ -51,7 +52,7 @@ export function useUtterances() {
           setRows([]);
           setCount(0);
         } else {
-          setRows((data ?? []) as UtteranceRow[]);
+          setRows(normalizeUtteranceRows(data));
           setCount(c ?? 0);
         }
         setLoading(false);

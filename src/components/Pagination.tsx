@@ -15,19 +15,19 @@ export function Pagination({ page, totalPages, loading, onPageChange }: Paginati
         variant="outline"
         onClick={() => onPageChange(Math.max(1, page - 1))}
         disabled={page <= 1 || loading}
-        className="bg-slate-900/60 text-slate-100 ring-1 ring-white/10"
+        className="bg-white/70 border-purple-200 text-gray-700 hover:bg-purple-50 hover:border-purple-300 hover:text-purple-700"
       >
         <ChevronLeft className="mr-1 h-4 w-4" />
         {page === 1 ? "Prev" : "Previous"}
       </Button>
-      <span className="text-sm tabular-nums text-slate-300">
+      <span className="text-sm tabular-nums text-gray-600 font-medium">
         Page {page} / {Math.max(1, totalPages)}
       </span>
       <Button
         variant="outline"
         onClick={() => onPageChange(page < totalPages ? page + 1 : page)}
         disabled={page >= totalPages || loading}
-        className="bg-slate-900/60 text-slate-100 ring-1 ring-white/10"
+        className="bg-white/70 border-purple-200 text-gray-700 hover:bg-purple-50 hover:border-purple-300 hover:text-purple-700"
       >
         Next
         <ChevronRight className="ml-1 h-4 w-4" />

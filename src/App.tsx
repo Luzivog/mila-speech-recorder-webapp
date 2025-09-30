@@ -1,46 +1,51 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useCallback } from "react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Header } from "@/components/Header";
 import { UtterancesTable } from "@/components/UtterancesTable";
-import { useTheme } from "@/hooks/useTheme";
 import { useUtterances } from "@/hooks/useUtterances";
+import { useSelectableIds } from "@/hooks/useSelectableIds";
+import { useUtteranceDownload } from "@/hooks/useUtteranceDownload";
 
 function App() {
-  const { dark, setDark } = useTheme();
   const {
     rows,
-    count,
     page,
     setPage,
     language,
     setLanguage,
     loading,
-    error,
     totalPages,
-    debouncedLang,
   } = useUtterances();
 
+  const {
+    selectedIds,
+    selectedCount,
+    toggleRow,
+    toggleMany,
+  } = useSelectableIds();
+
+  const { downloading, downloadByIds } = useUtteranceDownload();
+
+  const handleDownload = useCallback(() => {
+    if (downloading || selectedIds.size === 0) {
+      return;
+    }
+
+    void downloadByIds(Array.from(selectedIds));
+  }, [downloadByIds, downloading, selectedIds]);
+
   return (
-    <div className="min-h-screen w-full bg-gradient-to-b from-slate-900 via-slate-950 to-black text-slate-100 dark:from-slate-950 dark:via-black dark:to-black">
-      <div className="flex min-h-screen w-full flex-col gap-6 p-4 md:p-6 lg:p-8">
+    <div className="min-h-screen w-full bg-gradient-to-br from-blue-50/30 via-purple-50/20 to-indigo-50/30">
+      <div className="flex w-full min-h-screen flex-col gap-6 p-6 md:p-8">
         <Header
-          count={count}
-          loading={loading}
           language={language}
           onLanguageChange={setLanguage}
-          dark={dark}
-          onThemeToggle={() => setDark((d) => !d)}
+          selectedCount={selectedCount}
+          downloading={downloading}
+          onDownload={handleDownload}
         />
 
-        <Card className="flex min-h-0 flex-1 overflow-hidden border-white/10 bg-slate-900/40 shadow-2xl ring-1 ring-white/10 backdrop-blur-xl">
-          <CardHeader className="border-b border-white/10">
-            <CardTitle className="text-lg text-slate-200">
-              {loading
-                ? "Loading…"
-                : `Showing ${rows.length} ${debouncedLang ? `results for "${debouncedLang}"` : "rows"}`}
-              {error && <span className="ml-2 text-sm text-red-400">— {error}</span>}
-            </CardTitle>
-          </CardHeader>
-
+        <Card className="flex min-h-0 flex-1 overflow-hidden border-purple-200/60 bg-white/80 backdrop-blur-xl shadow-xl shadow-purple-100/50 ring-1 ring-purple-100/50">
           <CardContent className="flex min-h-0 flex-1 flex-col gap-4 p-0">
             <UtterancesTable
               rows={rows}
@@ -48,6 +53,9 @@ function App() {
               page={page}
               totalPages={totalPages}
               onPageChange={setPage}
+              selectedIds={selectedIds}
+              onToggleRow={toggleRow}
+              onToggleAll={toggleMany}
             />
           </CardContent>
         </Card>
