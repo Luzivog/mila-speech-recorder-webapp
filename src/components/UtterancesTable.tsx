@@ -54,7 +54,7 @@ export function UtterancesTable({
       {/* Scrollable table wrapper */}
       <div className="relative flex min-h-0 flex-1 overflow-hidden">
         <div className="min-h-0 flex-1 overflow-auto">
-          <Table className="w-full">
+          <Table className="w-full table-fixed">
             <TableHeader className="sticky top-0 z-40 bg-gradient-to-r from-purple-50/90 to-indigo-50/90 backdrop-blur-sm">
               <TableRow className="[&>th]:border-b [&>th]:border-purple-200/60">
                 <TableHead className="w-12">
@@ -70,7 +70,7 @@ export function UtterancesTable({
                 </TableHead>
                 <TableHead className="w-[170px] text-gray-700 font-semibold">Created</TableHead>
                 <TableHead className="w-[120px] text-gray-700 font-semibold">Language</TableHead>
-                <TableHead className="text-gray-700 font-semibold">Text</TableHead>
+                <TableHead className="text-gray-700 font-semibold min-w-0">Text</TableHead>
                 <TableHead className="w-[200px] text-gray-700 font-semibold">Speaker Name</TableHead>
                 <TableHead className="w-[220px] text-gray-700 font-semibold">Audio</TableHead>
               </TableRow>

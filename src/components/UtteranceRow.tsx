@@ -15,13 +15,21 @@ export function UtteranceRow({ utterance, selected, onSelectChange, disabled = f
   const publicUrl = storageKey
     ? supabase.storage.from(BUCKET_NAME).getPublicUrl(storageKey).data.publicUrl
     : null;
+  const createdAtDisplay = utterance.created_at
+    ? new Date(utterance.created_at).toLocaleString()
+    : "—";
+  const languageDisplay = utterance.language ?? "—";
+  const textDisplay = utterance.text ?? "—";
+  const speakerName = utterance.speaker?.display_name ?? "";
+  const speakerDisplay =
+    !speakerName || speakerName === "default" ? "Not specified" : speakerName;
 
   return (
     <TableRow
       className="data-[selected=true]:bg-purple-100/40 transition-colors hover:bg-purple-50/50 [&>td]:border-b [&>td]:border-purple-100/60"
       data-selected={selected ? "true" : undefined}
     >
-      <TableCell className="w-12">
+      <TableCell className="w-12 shrink-0">
         <input
           type="checkbox"
           aria-label={`Select utterance ${utterance.id}`}
@@ -32,19 +40,38 @@ export function UtteranceRow({ utterance, selected, onSelectChange, disabled = f
         />
       </TableCell>
       <TableCell className="whitespace-nowrap text-sm text-gray-600">
-        {utterance.created_at ? new Date(utterance.created_at).toLocaleString() : "—"}
+        <span
+          className="block max-w-[9rem] truncate"
+          title={createdAtDisplay !== "—" ? createdAtDisplay : undefined}
+        >
+          {createdAtDisplay}
+        </span>
       </TableCell>
       <TableCell className="font-medium text-gray-800">
-        {utterance.language ?? "—"}
+        <span
+          className="block max-w-[6rem] truncate"
+          title={languageDisplay !== "—" ? languageDisplay : undefined}
+        >
+          {languageDisplay}
+        </span>
+      </TableCell>
+      <TableCell className="text-gray-700 min-w-0">
+        <span
+          className="block w-full truncate"
+          title={textDisplay !== "—" ? textDisplay : undefined}
+        >
+          {textDisplay}
+        </span>
       </TableCell>
       <TableCell
-        className="max-w-[min(60vw,45rem)] truncate text-gray-700"
-        title={utterance.text ?? undefined}
+        className="font-mono text-xs text-gray-500"
       >
-        {(utterance.text) ?? "—"} 
-      </TableCell>
-      <TableCell className="font-mono text-xs text-gray-500">
-        {!utterance.speaker || utterance.speaker.display_name === "default" ? "Not specified" : utterance.speaker.display_name}
+        <span
+          className="block max-w-[10rem] truncate"
+          title={speakerDisplay !== "Not specified" ? speakerDisplay : undefined}
+        >
+          {speakerDisplay}
+        </span>
       </TableCell>
       <TableCell>
         {publicUrl ? (
