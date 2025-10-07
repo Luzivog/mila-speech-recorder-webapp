@@ -202,6 +202,10 @@ async function prepareAndDownloadZip(utterances: UtteranceRowType[]) {
   }
 
   const zip = new JSZip();
+  const missingAudioFileName = "missing-audio.txt";
+  const missingAudioMessage =
+    "No audio file was available for this utterance's primary recording.";
+  const audioTasks: Promise<void>[] = [];
 
   for (const [index, utterance] of utterances.entries()) {
     const folder = zip.folder(buildUtteranceFolderName(utterance, index));
@@ -213,24 +217,30 @@ async function prepareAndDownloadZip(utterances: UtteranceRowType[]) {
 
     folder.file("metadata.csv", createMetadataCsv(utterance));
 
-    try {
-      const audioAsset = await fetchPrimaryRecordingBlob(utterance);
-      if (audioAsset) {
-        folder.file(audioAsset.filename, audioAsset.buffer);
-      } else {
-        folder.file(
-          "missing-audio.txt",
-          "No audio file was available for this utterance's primary recording.",
-        );
-      }
-    } catch (audioErr) {
-      console.error(`Failed to download audio for utterance ${utterance.id}`, audioErr);
-      folder.file(
-        "missing-audio.txt",
-        "Audio download failed for this utterance's primary recording.",
-      );
-    }
+    audioTasks.push(
+      (async () => {
+        try {
+          const audioAsset = await fetchPrimaryRecordingBlob(utterance);
+          if (audioAsset) {
+            folder.file(audioAsset.filename, audioAsset.buffer);
+          } else {
+            folder.file(missingAudioFileName, missingAudioMessage);
+          }
+        } catch (audioErr) {
+          console.error(
+            `Failed to download audio for utterance ${utterance.id}`,
+            audioErr,
+          );
+          folder.file(
+            missingAudioFileName,
+            "Audio download failed for this utterance's primary recording.",
+          );
+        }
+      })()
+    );
   }
+
+  await Promise.all(audioTasks);
 
   const blob = await zip.generateAsync({ type: "blob" });
   const fileName = `utterances-${formatTimestampForFilename(new Date())}.zip`;
