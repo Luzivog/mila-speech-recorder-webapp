@@ -11,6 +11,9 @@ import {
   formatTimestampForFilename,
 } from "@/lib/download";
 
+type FFmpegInstance = import("@ffmpeg/ffmpeg").FFmpeg;
+type FetchFileFn = typeof import("@ffmpeg/util").fetchFile;
+
 const UTTERANCE_SELECT_COLUMNS =
   "id, idx, text, created_at, language, speaker:speakers(display_name), recordings(storage_key, ext, status)";
 
@@ -20,6 +23,80 @@ type AudioAsset = {
   buffer: ArrayBuffer;
   filename: string;
 };
+
+let ffmpegSetupPromise:
+  | Promise<{ ffmpeg: FFmpegInstance; fetchFile: FetchFileFn }>
+  | null = null;
+
+function createUniqueFileId() {
+  return Math.random().toString(36).slice(2);
+}
+
+async function getFFmpeg() {
+  if (typeof window === "undefined") {
+    throw new Error("Audio conversion is only supported in the browser.");
+  }
+
+  if (!ffmpegSetupPromise) {
+    ffmpegSetupPromise = (async () => {
+      const [{ FFmpeg }, { fetchFile }] = await Promise.all([
+        import("@ffmpeg/ffmpeg"),
+        import("@ffmpeg/util"),
+      ]);
+      const ffmpeg = new FFmpeg();
+      await ffmpeg.load();
+      return { ffmpeg, fetchFile };
+    })();
+  }
+
+  return ffmpegSetupPromise;
+}
+
+async function convertM4AToWav(buffer: ArrayBuffer): Promise<ArrayBuffer> {
+  const { ffmpeg, fetchFile } = await getFFmpeg();
+  const fileId = createUniqueFileId();
+  const inputName = `${fileId}.m4a`;
+  const outputName = `${fileId}.wav`;
+
+  const inputData = await fetchFile(new Blob([buffer]));
+  await ffmpeg.writeFile(inputName, inputData);
+
+  try {
+    const exitCode = await ffmpeg.exec([
+      "-i",
+      inputName,
+      "-c:a",
+      "pcm_s16le",
+      outputName,
+    ]);
+
+    if (exitCode !== 0) {
+      throw new Error(`FFmpeg exited with code ${exitCode}`);
+    }
+
+    const outputData = await ffmpeg.readFile(outputName);
+
+    if (!(outputData instanceof Uint8Array)) {
+      throw new Error("Unexpected data format returned from FFmpeg.");
+    }
+
+    const normalized = new Uint8Array(outputData);
+    return normalized.buffer;
+  } catch (err) {
+    throw new Error("Failed to convert audio to WAV.", { cause: err });
+  } finally {
+    try {
+      await ffmpeg.deleteFile(inputName);
+    } catch (cleanupErr) {
+      console.warn("Failed to clean up temporary input file", cleanupErr);
+    }
+    try {
+      await ffmpeg.deleteFile(outputName);
+    } catch (cleanupErr) {
+      console.warn("Failed to clean up temporary output file", cleanupErr);
+    }
+  }
+}
 
 async function fetchPrimaryRecordingBlob(
   utterance: UtteranceRowType,
@@ -38,9 +115,14 @@ async function fetchPrimaryRecordingBlob(
     throw error ?? new Error(`Audio not found for utterance ${utterance.id}`);
   }
 
-  const extension = (recording.ext ?? "").replace(/^\./, "") || "wav";
-  const filename = `audio.${extension}`;
-  const buffer = await data.arrayBuffer();
+  const extension = (recording.ext ?? "").replace(/^\./, "").toLowerCase() || "wav";
+  let filename = `audio.${extension}`;
+  let buffer = await data.arrayBuffer();
+
+  if (extension === "m4a") {
+    buffer = await convertM4AToWav(buffer);
+    filename = "audio.wav";
+  }
 
   return { buffer, filename };
 }
