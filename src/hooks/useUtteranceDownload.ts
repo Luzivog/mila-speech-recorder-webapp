@@ -15,7 +15,7 @@ type FFmpegInstance = import("@ffmpeg/ffmpeg").FFmpeg;
 type FetchFileFn = typeof import("@ffmpeg/util").fetchFile;
 
 const UTTERANCE_SELECT_COLUMNS =
-  "id, idx, text, created_at, language, speaker:speakers(display_name), recordings(storage_key, ext, status)";
+  "id, idx, text, created_at, language, speaker:speakers(display_name), recordings(storage_key, ext)";
 
 const FILTER_FETCH_BATCH_SIZE = 100;
 

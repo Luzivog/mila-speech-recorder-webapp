@@ -1,7 +1,6 @@
 export type RecordingRef = {
   storage_key: string | null;
   ext: string | null;
-  status: string | null;
 };
 
 export type UtteranceRow = {
