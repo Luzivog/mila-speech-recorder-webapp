@@ -12,5 +12,7 @@ export type UtteranceRow = {
   recordings?: RecordingRef[]; // via FK utterances.id -> recordings.utterance_id
   speaker?: {
     display_name: string | null;
+    gender: string;
+    age: number;
   } | null;
 };

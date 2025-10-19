@@ -1,6 +1,12 @@
 import type { UtteranceRow, RecordingRef } from "@/types/utterance";
 
-type RawSpeaker = { display_name: string | null } | { display_name: string | null }[] | null | undefined;
+type RawSpeakerValue = {
+  display_name: string | null;
+  gender?: string | null;
+  age?: number | string | null;
+};
+
+type RawSpeaker = RawSpeakerValue | RawSpeakerValue[] | null | undefined;
 type RawRecording = RecordingRef | RecordingRef[] | null | undefined;
 
 type RawUtterance = {
@@ -13,12 +19,42 @@ type RawUtterance = {
   recordings?: RawRecording;
 };
 
+function toSpeakerValue(value: RawSpeakerValue | undefined): UtteranceRow["speaker"] {
+  if (!value) return null;
+
+  const genderRaw = value.gender ?? "";
+  const genderNormalized = genderRaw.trim() || "unspecified";
+
+  const ageRaw = value.age;
+  let ageNumber: number | undefined;
+
+  if (typeof ageRaw === "number") {
+    ageNumber = Number.isFinite(ageRaw) ? ageRaw : undefined;
+  } else if (typeof ageRaw === "string" && ageRaw.trim()) {
+    const parsed = Number(ageRaw);
+    if (Number.isFinite(parsed)) {
+      ageNumber = parsed;
+    }
+  }
+
+  let normalizedAge = Number.NaN;
+  if (typeof ageNumber === "number") {
+    normalizedAge = Math.trunc(ageNumber);
+  }
+
+  return {
+    display_name: value.display_name ?? null,
+    gender: genderNormalized,
+    age: normalizedAge,
+  };
+}
+
 function normalizeSpeaker(raw: RawSpeaker): UtteranceRow["speaker"] {
   if (!raw) return null;
   if (Array.isArray(raw)) {
-    return raw[0] ? { display_name: raw[0].display_name ?? null } : null;
+    return toSpeakerValue(raw[0]);
   }
-  return { display_name: raw.display_name ?? null };
+  return toSpeakerValue(raw);
 }
 
 function normalizeRecordings(raw: RawRecording): RecordingRef[] | undefined {

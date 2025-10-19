@@ -36,11 +36,17 @@ export function buildUtteranceFolderName(utterance: UtteranceRow, index: number)
 }
 
 export function createMetadataCsv(utterance: UtteranceRow): string {
-  const headers = ["text", "language", "speaker_name"];
+  const headers = ["text", "language", "speaker_name", "speaker_gender", "speaker_age"];
+  const speaker = utterance.speaker;
+  const speakerGender = speaker?.gender?.trim() || "Not specified";
+  const speakerAge =
+    speaker && Number.isFinite(speaker.age) ? String(speaker.age) : "Not specified";
   const values = [
     utterance.text ?? "",
     utterance.language ?? "",
     getSpeakerDisplayName(utterance),
+    speakerGender,
+    speakerAge,
   ];
 
   const escape = (value: string) => `"${value.replace(/"/g, '""')}"`;

@@ -36,7 +36,7 @@ export function useUtterances() {
       let q = supabase
         .from("utterances")
         .select(
-          "id, device_id, speaker_id, idx, text, created_at, language, speaker:speakers(display_name), recordings(storage_key, ext)",
+          "id, device_id, speaker_id, idx, text, created_at, language, speaker:speakers(display_name, gender, age), recordings(storage_key, ext)",
           { count: "exact" }
         )
         .order("created_at", { ascending: false })
