@@ -14,9 +14,12 @@ function App() {
     count,
     language,
     setLanguage,
+    speaker,
+    setSpeaker,
     loading,
     totalPages,
     debouncedLang,
+    debouncedSpeaker,
   } = useUtterances();
 
   const {
@@ -41,8 +44,8 @@ function App() {
       return;
     }
 
-    void downloadFiltered({ language: debouncedLang });
-  }, [count, debouncedLang, downloadFiltered, downloading]);
+    void downloadFiltered({ language: debouncedLang, speaker: debouncedSpeaker });
+  }, [count, debouncedLang, debouncedSpeaker, downloadFiltered, downloading]);
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-blue-50/30 via-purple-50/20 to-indigo-50/30">
@@ -50,6 +53,8 @@ function App() {
         <Header
           language={language}
           onLanguageChange={setLanguage}
+          speaker={speaker}
+          onSpeakerChange={setSpeaker}
           selectedCount={selectedCount}
           filteredCount={count}
           downloading={downloading}

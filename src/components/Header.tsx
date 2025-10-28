@@ -5,6 +5,8 @@ import { Download } from "lucide-react";
 interface HeaderProps {
   language: string;
   onLanguageChange: (language: string) => void;
+  speaker: string;
+  onSpeakerChange: (speaker: string) => void;
   selectedCount: number;
   filteredCount: number;
   onDownload: () => void;
@@ -15,6 +17,8 @@ interface HeaderProps {
 export function Header({
   language,
   onLanguageChange,
+  speaker,
+  onSpeakerChange,
   selectedCount,
   filteredCount,
   onDownload,
@@ -29,6 +33,13 @@ export function Header({
       </h1>
 
       <div className="flex items-center gap-3">
+        <Input
+          placeholder="Filter by speaker name (e.g., Jane Doe)…"
+          value={speaker}
+          onChange={(e) => onSpeakerChange(e.target.value)}
+          className="w-72 bg-white/70 border-purple-200 text-gray-800 placeholder:text-gray-500 focus:border-purple-400 focus:ring-purple-300"
+        />
+
         <Input
           placeholder="Filter by language (e.g., en, fr, English)…"
           value={language}

@@ -24,6 +24,11 @@ type AudioAsset = {
   filename: string;
 };
 
+type UtteranceFilters = {
+  language?: string | null;
+  speaker?: string | null;
+};
+
 let ffmpegSetupPromise:
   | Promise<{ ffmpeg: FFmpegInstance; fetchFile: FetchFileFn }>
   | null = null;
@@ -157,10 +162,15 @@ async function fetchUtterancesByIds(ids: string[]): Promise<UtteranceRowType[]> 
   return normalizeUtteranceRows(data);
 }
 
-async function fetchUtterancesByFilter(filters: {
-  language?: string | null;
-}): Promise<UtteranceRowType[]> {
+async function fetchUtterancesByFilter(filters: UtteranceFilters): Promise<UtteranceRowType[]> {
   const utterances: UtteranceRowType[] = [];
+
+  const language = filters.language?.trim() ?? "";
+  const speaker = filters.speaker?.trim() ?? "";
+  // Use an inner join only when speaker filtering is active.
+  const speakerSelect = speaker
+    ? "speaker:speakers!inner(display_name, gender, age)"
+    : "speaker:speakers(display_name, gender, age)";
 
   let from = 0;
   let hasMore = true;
@@ -168,13 +178,18 @@ async function fetchUtterancesByFilter(filters: {
   while (hasMore) {
     let query = supabase
       .from("utterances")
-      .select(UTTERANCE_SELECT_COLUMNS)
+      .select(
+        `id, idx, text, created_at, language, ${speakerSelect}, recordings(storage_key, ext)`
+      )
       .order("created_at", { ascending: false })
       .range(from, from + FILTER_FETCH_BATCH_SIZE - 1);
 
-    const language = filters.language?.trim();
     if (language) {
       query = query.ilike("language", `%${language}%`);
+    }
+
+    if (speaker) {
+      query = query.ilike("speakers.display_name", `%${speaker}%`);
     }
 
     const { data, error } = await query;
@@ -281,7 +296,7 @@ export function useUtteranceDownload() {
   );
 
   const downloadFiltered = useCallback(
-    async (filters: { language?: string | null }) => {
+    async (filters: UtteranceFilters) => {
       if (downloading) {
         return;
       }
